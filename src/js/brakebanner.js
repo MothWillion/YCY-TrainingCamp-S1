@@ -4,7 +4,9 @@ class BrakeBanner {
 			width: window.innerWidth,
 			height: window.innerHeight,
 			backgroundColor: 0xffffff,
-			resizeTo: window
+			resizeTo: window,
+			autoDensity: true,
+			resolution: 2
 		});
 		document.querySelector(selector).appendChild(this.app.view);
 
@@ -26,10 +28,9 @@ class BrakeBanner {
 
 		this.container = new PIXI.Container();
 		this.stage.addChild(this.container);
-		
+
 		this.loader.onComplete.add(() => {
-			this.showBike();
-			this.showButton();
+			this.show();
 			// container内部资源加载完成才能取到它的宽高
 			this.container.x = window.innerWidth - this.container.width;
 			this.container.y = window.innerHeight - this.container.height;
@@ -48,42 +49,10 @@ class BrakeBanner {
 		});
 		this.loader.load();
 	}
-	// 显示按钮
-	showButton() {
-		const container = new PIXI.Container();
-		this.container.addChild(container);
-		let btnGroup = Object.keys(this.assetsConfig).filter(x => x.indexOf('btn') > -1);
-		btnGroup.forEach(x => {
-			let texture = this.getTextrue(x);
-			let texture2;
-			texture.pivot.x = texture.pivot.y = texture.width / 2;
-			container.addChild(texture);
-			if (x === 'btnCircle') {
-				texture2 = this.getTextrue(x, true);
-				texture2.pivot.x = texture2.pivot.y = texture2.width / 2;
-				container.addChild(texture2);
-
-				texture.scale.x = texture.scale.y = .8;
-				gsap.to(texture.scale, { duration: 1, x: 1.3, y: 1.3, repeat: -1 });
-				gsap.to(texture, { duration: 1, alpha: 0, repeat: -1 });
-			}
-		});
-		container.x = container.y = 400;
-		container.interactive = true;
-		container.buttonMode = true;
-		container.on('mousedown', () => {
-			// this.resources['bikeLever'].rotation = Math.PI / 180 * -30;
-			gsap.to(this.resources['bikeLever'], { duration: 1, rotation: Math.PI / 180 * -30 });
-		});
-		container.on('mouseup', () => {
-			// this.resources['bikeLever'].rotation = 0;
-			gsap.to(this.resources['bikeLever'], { duration: 1, rotation: 0 })
-		});
-
-	}
-	showBike() {
-		const container = new PIXI.Container();
-		this.container.addChild(container);
+	// 显示
+	show() {
+		const bikeContainer = new PIXI.Container();
+		this.container.addChild(bikeContainer);
 		let bikeGroup = Object.keys(this.assetsConfig).filter(x => x.indexOf('bike') > -1);
 		bikeGroup.forEach(x => {
 			let texture = this.getTextrue(x);
@@ -93,9 +62,92 @@ class BrakeBanner {
 				texture.x = 722;
 				texture.y = 900;
 			}
-			container.addChild(texture);
+			bikeContainer.addChild(texture);
 		});
-		container.scale.x = container.scale.y = .3;
+		bikeContainer.scale.x = bikeContainer.scale.y = .3;
+		const buttonContainer = new PIXI.Container();
+		this.container.addChild(buttonContainer);
+		let btnGroup = Object.keys(this.assetsConfig).filter(x => x.indexOf('btn') > -1);
+		btnGroup.forEach(x => {
+			let texture = this.getTextrue(x);
+			let texture2;
+			texture.pivot.x = texture.pivot.y = texture.width / 2;
+			buttonContainer.addChild(texture);
+			if (x === 'btnCircle') {
+				texture2 = this.getTextrue(x, true);
+				texture2.pivot.x = texture2.pivot.y = texture2.width / 2;
+				buttonContainer.addChild(texture2);
+
+				texture.scale.x = texture.scale.y = .8;
+				gsap.to(texture.scale, { duration: 1, x: 1.3, y: 1.3, repeat: -1 });
+				gsap.to(texture, { duration: 1, alpha: 0, repeat: -1 });
+			}
+		});
+		buttonContainer.x = buttonContainer.y = 400;
+		buttonContainer.interactive = true;
+		buttonContainer.buttonMode = true;
+		buttonContainer.on('mousedown', () => {
+			// this.resources['bikeLever'].rotation = Math.PI / 180 * -30;
+			gsap.to(this.resources['bikeLever'], { duration: 1, rotation: Math.PI / 180 * -30 });
+			pause();
+		});
+		buttonContainer.on('mouseup', () => {
+			// this.resources['bikeLever'].rotation = 0;
+			gsap.to(this.resources['bikeLever'], { duration: 1, rotation: 0 });
+			start();
+		});
+		const particlesContainer = new PIXI.Container();
+		this.stage.addChild(particlesContainer);
+		particlesContainer.pivot.x = particlesContainer.x = window.innerWidth / 2;
+		particlesContainer.pivot.y = particlesContainer.y = window.innerHeight / 2;
+		particlesContainer.rotation = Math.PI / 180 * 30;
+		let particles = [];
+		const colors = [0xf1cf54, 0xb5cea8, 0xf1cf54, 0x818181, 0x000000];
+		for (let i = 0; i < 10; i++) {
+			let particle = new PIXI.Graphics();
+			particle.beginFill(colors[Math.floor(Math.random() * colors.length)]);
+			particle.drawCircle(0, 0, 5);
+			particle.endFill();
+
+			const pItem = {
+				sx: window.innerWidth * Math.random(),
+				sy: window.innerHeight * Math.random(),
+				m: particle
+			}
+			particle.x = pItem.sx;
+			particle.y = pItem.sy;
+			particlesContainer.addChild(particle);
+			particles.push(pItem);
+		}
+		let speed = 0;
+		const loop = () => {
+			speed += .1;
+			speed = Math.min(20, speed);
+			particles.forEach(x => {
+				x.m.y += speed;
+				x.m.scale.x -= .0003 * speed;
+				x.m.scale.y += .003 * speed;
+				x.m.scale.x = Math.max(.01
+					, x.m.scale.x);
+				x.m.scale.y = Math.min(40, x.m.scale.y);
+				// 计算旋转后的高度
+				if (x.m.y > window.innerHeight * 1.2) {
+					x.m.y = - window.innerHeight * .2;
+				}
+			})
+		}
+		const start = () => {
+			speed = 0;
+			gsap.ticker.add(loop)
+		}
+		const pause = () => {
+			gsap.ticker.remove(loop)
+			particles.forEach(x => {
+				x.m.scale.x = x.m.scale.y = 1;
+				gsap.to(x.m, { duration: .6, x: x.sx, y: x.sy, ease: 'elastic.out' });
+			})
+		}
+		start();
 	}
 	// 获取资源
 	getTextrue(name, isNew) {
@@ -107,4 +159,5 @@ class BrakeBanner {
 		}
 		return this.resources[name];
 	}
+
 }
