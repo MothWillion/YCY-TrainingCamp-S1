@@ -3,7 +3,7 @@ class BrakeBanner {
 		this.app = new PIXI.Application({
 			width: window.innerWidth,
 			height: window.innerHeight,
-			backgroundColor: 0xffffff,
+			backgroundColor: 0x000000,
 			resizeTo: window,
 			autoDensity: true,
 			resolution: 2
@@ -61,10 +61,17 @@ class BrakeBanner {
 				texture.pivot.y = 455;
 				texture.x = 722;
 				texture.y = 900;
+				texture.tint = 0x00ffff
+			}
+			if(x === 'bike') {
+				texture.tint = 0xff0000
+			}
+			if(x === 'bikeHandlerbar') {
+				texture.tint = 0xff00ff
 			}
 			bikeContainer.addChild(texture);
 		});
-		bikeContainer.scale.x = bikeContainer.scale.y = .3;
+		bikeContainer.scale.x = bikeContainer.scale.y = .25;
 		const buttonContainer = new PIXI.Container();
 		this.container.addChild(buttonContainer);
 		let btnGroup = Object.keys(this.assetsConfig).filter(x => x.indexOf('btn') > -1);
@@ -83,7 +90,8 @@ class BrakeBanner {
 				gsap.to(texture, { duration: 1, alpha: 0, repeat: -1 });
 			}
 		});
-		buttonContainer.x = buttonContainer.y = 400;
+		buttonContainer.x = buttonContainer.y = 300;
+		buttonContainer.scale.x = buttonContainer.scale.y = .5;
 		buttonContainer.interactive = true;
 		buttonContainer.buttonMode = true;
 		buttonContainer.on('mousedown', () => {
@@ -102,7 +110,7 @@ class BrakeBanner {
 		particlesContainer.pivot.y = particlesContainer.y = window.innerHeight / 2;
 		particlesContainer.rotation = Math.PI / 180 * 30;
 		let particles = [];
-		const colors = [0xf1cf54, 0xb5cea8, 0xf1cf54, 0x818181, 0x000000];
+		const colors = [0xf1cf54, 0xb5cea8, 0xcf09d3, 0xf8b62a, 0x3b8f09];
 		for (let i = 0; i < 10; i++) {
 			let particle = new PIXI.Graphics();
 			particle.beginFill(colors[Math.floor(Math.random() * colors.length)]);
